@@ -161,17 +161,17 @@ namespace mypdi{
 	*/
 	void printValues(cv::Mat mat);
 	
+	/**
+	 * Get intensity profile from image
+	 *
+	 * @param {Mat} image Image to use
+	 * @param {int}   row Row to scan
+	 */
+	vector<int> scanLine(cv::Mat image, int row);
+	
 	/*************************************************************************/
 	/****************************** CALLBACKS ********************************/
 	/*************************************************************************/
-	
-	/**
-	 * OnTrackBarChangeCallback to set threshold to apply on image
-	 *
-	 * @param {int}   threshold Threshold to apply to image
-	 * @param {void*}     param Params to be used into callback
-	 */
-	void binarizeTrackBarCallback(int threshold, void *params);
 	
 	/**
 	 * OnMouseClickCallback on EE
@@ -668,8 +668,8 @@ namespace mypdi{
 	}
 	
 	/**
-	* Print Mat values on console
-	*/
+	 * Print Mat values on console
+	 */
 	void printValues(cv::Mat mat) {
 		// Get mat size
 		int cols = mat.cols;
@@ -685,29 +685,29 @@ namespace mypdi{
 		}
 	}
 	
+	/**
+	 * Get intensity profile from image
+	 */
+	vector<int> scanLine(cv::Mat image, int row) {
+		// Initialize variables
+		int cols;
+		vector<int> line;
+		
+		// Get count of columns
+		cols = image.cols;
+		
+		// Get all values of that row
+		for(int j=0;j<cols;j++) { 
+			int val = image.at<uchar>(row, j);
+			line.push_back(val);
+		}
+		
+		return line;
+	}
+	
 	/*************************************************************************/
 	/****************************** CALLBACKS ********************************/
 	/*************************************************************************/
-	
-	/**
-	 * OnTrackBarChangeCallback to set threshold to apply on image
-	 */
-	void binarizeTrackBarCallback(int threshold, void *param) {
-		// Initialize image to work
-		cv::Mat workImage;
-		
-		// Cast param
-		cv::Mat* image = (cv::Mat *) param;
-		
-		// Create image to work
-		(*image).copyTo(workImage);
-		
-		// Apply thresholding
-		cv::threshold(workImage, workImage, threshold, 254, CV_THRESH_BINARY);
-		
-		// Show image reconstructed
-		imshow("Binarize image", workImage);
-	}
 	
 	/**
 	 * OnMouseClickCallback on EE
