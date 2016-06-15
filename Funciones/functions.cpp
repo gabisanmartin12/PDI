@@ -109,17 +109,30 @@ namespace mypdi{
 	double getECM(cv::Mat firstImage, cv::Mat secondImage);
 	
 	/**
-	 * Get thresholds for filter in hsv color pallet
+	 * Get thresholds for filter in HSV color pallet
 	 *
 	 * @param {Mat} image  Image to use
-	 * @param {int} minHue Minumum value of hue
-	 * @param {int} maxHue Maximum value of hue
-	 * @param {int} minSat Minimum value of saturation
-	 * @param {int} maxSat Maximum value of saturation
-	 * @param {int} minVal Minimum value of intensity
-	 * @param {int} maxVal Maximum value of intensity
+	 * @param {int} minHue Minumum value of hue component
+	 * @param {int} maxHue Maximum value of hue component
+	 * @param {int} minSat Minimum value of saturation component
+	 * @param {int} maxSat Maximum value of saturation component 
+	 * @param {int} minVal Minimum value of intensity component
+	 * @param {int} maxVal Maximum value of intensity component
 	 */
 	void getThresholdValuesForHsv(cv::Mat image, int &minHue, int &maxHue, int &minSat, int &maxSat, int &minVal, int &maxVal);
+	
+	/**
+	 * Get thresholds for filter in RGB color pallet
+	 *
+	 * @param {Mat} image  Image to use
+	 * @param {int} minR Minumum value of red component
+	 * @param {int} maxR Maximum value of red component
+	 * @param {int} minG Minimum value of green component
+	 * @param {int} maxG Maximum value of green component 
+	 * @param {int} minB Minimum value of blue component
+	 * @param {int} maxB Maximum value of blue component
+	 */
+	void getThresholdValuesForRgb(cv::Mat image, int &minR, int &maxR, int &minG, int &maxG, int &minB, int &maxB);
 
 	/**
 	 * Add m rows both top and bottom and add n cols both left and right with
@@ -520,6 +533,44 @@ namespace mypdi{
 			);
 			// Show image thresholded
 			imshow("Image HSV", imageHsvThresholded);
+		} while(waitKey(33) != 27);
+		
+		// Delete all windows
+		destroyAllWindows();
+	}
+	
+	/**
+	 * Get thresholds for filter in RGB color pallet
+	 */
+	void getThresholdValuesForRgb(cv::Mat image, int &minR, int &maxR, int &minG, int &maxG, int &minB, int &maxB) {
+		// Initialize imageHsv image
+		cv::Mat imageThresholded;
+		
+		// Create windows to use
+		namedWindow("Thresholds", CV_WINDOW_FREERATIO);
+		namedWindow("Image"     , CV_WINDOW_KEEPRATIO);
+		
+		// Show images
+		imshow("Image", image);
+		
+		// Create trackbars
+		createTrackbar("Red min"  , "Thresholds", &minR, maxR);
+		createTrackbar("Red max"  , "Thresholds", &maxR, maxR);
+		createTrackbar("Green min", "Thresholds", &minG, maxG);
+		createTrackbar("Green max", "Thresholds", &maxG, maxG);
+		createTrackbar("Blue min" , "Thresholds", &minB, maxB);
+		createTrackbar("Blue max" , "Thresholds", &maxB, maxB);
+		
+		do {
+			// Threshold image with that values of each HSV component
+			inRange(
+				image                     ,
+				Scalar(minR, minG, minB) ,
+				Scalar(maxR, maxG, maxB) ,
+				imageThresholded
+			);
+			// Show image thresholded
+			imshow("Image", imageThresholded);
 		} while(waitKey(33) != 27);
 		
 		// Delete all windows
