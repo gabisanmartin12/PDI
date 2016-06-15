@@ -107,6 +107,19 @@ namespace mypdi{
 	 * @param {Mat} secondImage Second image to calcule rms
 	 */
 	double getECM(cv::Mat firstImage, cv::Mat secondImage);
+	
+	/**
+	 * Get thresholds for filter in hsv color pallet
+	 *
+	 * @param {Mat} image  Image to use
+	 * @param {int} minHue Minumum value of hue
+	 * @param {int} maxHue Maximum value of hue
+	 * @param {int} minSat Minimum value of saturation
+	 * @param {int} maxSat Maximum value of saturation
+	 * @param {int} minVal Minimum value of intensity
+	 * @param {int} maxVal Maximum value of intensity
+	 */
+	void getThresholdValuesForHsv(cv::Mat image, int &minHue, int &maxHue, int &minSat, int &maxSat, int &minVal, int &maxVal);
 
 	/**
 	 * Add m rows both top and bottom and add n cols both left and right with
@@ -286,41 +299,36 @@ namespace mypdi{
 	/**
 	 * Binarize an image
 	 */
-	cv::Mat binarize(cv::Mat image) {
+	cv::Mat binarize(cv::Mat image, int &minIntensity, int &maxIntensity) {
 		// Create image to work
 		cv::Mat workImage;
-		// Initialize threshold
-		int threshold = 0;
 		
 		// Create window
-		namedWindow("Binarize image", CV_WINDOW_KEEPRATIO);
+		cv::namedWindow("Binarize image", CV_WINDOW_KEEPRATIO);
 		// Show image
 		imshow("Binarize image", image);
 		
-		// Add to it a trackbar
-		createTrackbar(
-					   "Threshold"              ,
-					   "Binarize image"         ,
-					   &threshold               ,
-					   254                      ,
-					   binarizeTrackBarCallback ,
-					   &image
-					   );
+		// Create trackbars
+		cv::createTrackbar("Min intensity", "Binarize image", &minIntensity, maxIntensity);
+		cv::createTrackbar("Max intensity", "Binarize image", &maxIntensity, maxIntensity);
 		
-		// First call
-		binarizeTrackBarCallback(0, &image);
+		do {
+			// Threshold image with that values of each HSV component
+			inRange(
+				image                     ,
+				cv::Scalar(minIntensity) ,
+				cv::Scalar(maxIntensity) ,
+				workImage
+			);
+			// Show image thresholded
+			imshow("Binarize image", workImage);
+		} while(cv::waitKey(33) != 27);
 		
-		// Waiting for key pressed
-		waitKey();
-		
-		// Get threshold
-		threshold = getTrackbarPos("Threshold", "Binarize image");
-		
-		// Destroy binary window
-		destroyWindow("Binarize image");
+		// Delete all windows
+		cv::destroyAllWindows();
 		
 		// Apply threshold
-		cv::threshold(image, workImage, threshold, 254, CV_THRESH_BINARY_INV);
+		cv::threshold(image, workImage, minIntensity, maxIntensity, CV_THRESH_BINARY_INV);
 		
 		return workImage;
 	}
@@ -474,6 +482,48 @@ namespace mypdi{
 		ecm /= N;
 
 		return ecm;
+	}
+	
+	/**
+	 * Get thresholds for filter in hsv color pallet
+	 */
+	void getThresholdValuesForHsv(cv::Mat image, int &minHue, int &maxHue, int &minSat, int &maxSat, int &minVal, int &maxVal) {
+		// Initialize imageHsv image
+		cv::Mat imageHsv, imageHsvThresholded;
+		
+		// Convert image to Hsv colors
+		cv::cvtColor(image, imageHsv, CV_RGB2HSV);
+		
+		// Create windows to use
+		namedWindow("Thresholds", CV_WINDOW_FREERATIO);
+		namedWindow("Image"     , CV_WINDOW_KEEPRATIO);
+		namedWindow("Image HSV" , CV_WINDOW_KEEPRATIO);
+		
+		// Show images
+		imshow("Image", image);
+		
+		// Create trackbars
+		createTrackbar("Hue min", "Thresholds", &minHue, maxHue);
+		createTrackbar("Hue max", "Thresholds", &maxHue, maxHue);
+		createTrackbar("Sat min", "Thresholds", &minSat, maxSat);
+		createTrackbar("Sat max", "Thresholds", &maxSat, maxSat);
+		createTrackbar("Val min", "Thresholds", &minVal, maxVal);
+		createTrackbar("Val max", "Thresholds", &maxVal, maxVal);
+		
+		do {
+			// Threshold image with that values of each HSV component
+			inRange(
+				imageHsv                       ,
+				Scalar(minHue, minSat, minVal) ,
+				Scalar(maxHue, maxSat, maxVal) ,
+				imageHsvThresholded
+			);
+			// Show image thresholded
+			imshow("Image HSV", imageHsvThresholded);
+		} while(waitKey(33) != 27);
+		
+		// Delete all windows
+		destroyAllWindows();
 	}
 
 	/**
