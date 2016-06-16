@@ -6,6 +6,7 @@
 #include <opencv2/opencv.hpp>
 #include <math.h>
 #include <iostream>
+#include <vector>
 
 using namespace std;
 
@@ -107,6 +108,15 @@ namespace mypdi{
 	 * @param {Mat} secondImage Second image to calcule rms
 	 */
 	double getECM(cv::Mat firstImage, cv::Mat secondImage);
+	
+	/**
+	 * Get the bounding box of the most bigger blob
+	 *
+	 * @param {Mat}  image Image to use
+	 * @param {int}   mode Contour retrieval mode
+	 * @param {int} method Contour approximation method 
+	 */
+	cv::Rect getMostBiggerBlobBoundingBox(cv::Mat imag, int mode = CV_RETR_EXTERNAL, int method = CV_CHAIN_APPROX_SIMPLE);
 	
 	/**
 	 * Get thresholds for filter in HSV color pallet
@@ -498,6 +508,34 @@ namespace mypdi{
 	}
 	
 	/**
+	 * Get the bounding box of the most bigger blob
+	 */
+	cv::Rect getMostBiggerBlobBoundingBox(cv::Mat image, int mode, int method) {
+		int mostBiggerArea = 0;
+		cv::Rect boundingBox;
+		vector<vector<cv::Point> > contours;
+		vector<vector<cv::Point> >::iterator index, it;
+		
+		// Find the contourns
+		cv::findContours(image, contours, mode, method);
+		
+		// Filtering by area
+		index = contours.begin();
+		for (it = contours.begin(); it != contours.end(); it++) {
+			vector<cv::Point> contour = *it;
+			if (contour.size() > mostBiggerArea) {
+				mostBiggerArea = contour.size();
+				index          = it;
+			}
+		}
+		
+		// Extract the most bigger area
+		boundingBox = boundingRect(*index);
+		
+		return boundingBox;
+	}
+	
+	/**
 	 * Get thresholds for filter in hsv color pallet
 	 */
 	void getThresholdValuesForHsv(cv::Mat image, int &minHue, int &maxHue, int &minSat, int &maxSat, int &minVal, int &maxVal) {
@@ -508,35 +546,35 @@ namespace mypdi{
 		cv::cvtColor(image, imageHsv, CV_RGB2HSV);
 		
 		// Create windows to use
-		namedWindow("Thresholds", CV_WINDOW_FREERATIO);
-		namedWindow("Image"     , CV_WINDOW_KEEPRATIO);
-		namedWindow("Image HSV" , CV_WINDOW_KEEPRATIO);
+		cv::namedWindow("Thresholds", CV_WINDOW_FREERATIO);
+		cv::namedWindow("Image"     , CV_WINDOW_KEEPRATIO);
+		cv::namedWindow("Image HSV" , CV_WINDOW_KEEPRATIO);
 		
 		// Show images
 		imshow("Image", image);
 		
 		// Create trackbars
-		createTrackbar("Hue min", "Thresholds", &minHue, maxHue);
-		createTrackbar("Hue max", "Thresholds", &maxHue, maxHue);
-		createTrackbar("Sat min", "Thresholds", &minSat, maxSat);
-		createTrackbar("Sat max", "Thresholds", &maxSat, maxSat);
-		createTrackbar("Val min", "Thresholds", &minVal, maxVal);
-		createTrackbar("Val max", "Thresholds", &maxVal, maxVal);
+		cv::createTrackbar("Hue min", "Thresholds", &minHue, maxHue);
+		cv::createTrackbar("Hue max", "Thresholds", &maxHue, maxHue);
+		cv::createTrackbar("Sat min", "Thresholds", &minSat, maxSat);
+		cv::createTrackbar("Sat max", "Thresholds", &maxSat, maxSat);
+		cv::createTrackbar("Val min", "Thresholds", &minVal, maxVal);
+		cv::createTrackbar("Val max", "Thresholds", &maxVal, maxVal);
 		
 		do {
 			// Threshold image with that values of each HSV component
 			inRange(
 				imageHsv                       ,
-				Scalar(minHue, minSat, minVal) ,
-				Scalar(maxHue, maxSat, maxVal) ,
+				cv::Scalar(minHue, minSat, minVal) ,
+				cv::Scalar(maxHue, maxSat, maxVal) ,
 				imageHsvThresholded
 			);
 			// Show image thresholded
 			imshow("Image HSV", imageHsvThresholded);
-		} while(waitKey(33) != 27);
+		} while(cv::waitKey(33) != 27);
 		
 		// Delete all windows
-		destroyAllWindows();
+		cv::destroyAllWindows();
 	}
 	
 	/**
@@ -547,34 +585,34 @@ namespace mypdi{
 		cv::Mat imageThresholded;
 		
 		// Create windows to use
-		namedWindow("Thresholds", CV_WINDOW_FREERATIO);
-		namedWindow("Image"     , CV_WINDOW_KEEPRATIO);
+		cv::namedWindow("Thresholds", CV_WINDOW_FREERATIO);
+		cv::namedWindow("Image"     , CV_WINDOW_KEEPRATIO);
 		
 		// Show images
 		imshow("Image", image);
 		
 		// Create trackbars
-		createTrackbar("Red min"  , "Thresholds", &minR, maxR);
-		createTrackbar("Red max"  , "Thresholds", &maxR, maxR);
-		createTrackbar("Green min", "Thresholds", &minG, maxG);
-		createTrackbar("Green max", "Thresholds", &maxG, maxG);
-		createTrackbar("Blue min" , "Thresholds", &minB, maxB);
-		createTrackbar("Blue max" , "Thresholds", &maxB, maxB);
+		cv::createTrackbar("Red min"  , "Thresholds", &minR, maxR);
+		cv::createTrackbar("Red max"  , "Thresholds", &maxR, maxR);
+		cv::createTrackbar("Green min", "Thresholds", &minG, maxG);
+		cv::createTrackbar("Green max", "Thresholds", &maxG, maxG);
+		cv::createTrackbar("Blue min" , "Thresholds", &minB, maxB);
+		cv::createTrackbar("Blue max" , "Thresholds", &maxB, maxB);
 		
 		do {
 			// Threshold image with that values of each HSV component
 			inRange(
-				image                     ,
-				Scalar(minR, minG, minB) ,
-				Scalar(maxR, maxG, maxB) ,
+				image                         ,
+				cv::Scalar(minR, minG, minB) ,
+				cv::Scalar(maxR, maxG, maxB) ,
 				imageThresholded
 			);
 			// Show image thresholded
 			imshow("Image", imageThresholded);
-		} while(waitKey(33) != 27);
+		} while(cv::waitKey(33) != 27);
 		
 		// Delete all windows
-		destroyAllWindows();
+		cv::destroyAllWindows();
 	}
 
 	/**
